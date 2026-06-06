@@ -119,6 +119,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);font-si
     <span class="updt" id="updt"></span>
   </div>
 </div>
+<div style="background:#fef3c7;border-bottom:1px solid #fcd34d;padding:6px 14px;font-size:10px;color:#92400e;display:flex;align-items:flex-start;gap:5px"><span style="flex-shrink:0">&#9432;</span><span><strong>HQ Only</strong> &mdash; ไม่รวม Factory &bull; ไม่นับ Top Executive (CEO &amp; C-Suite) &amp; ExComm</span></div>
 <div class="page">
   <div class="kg">
     <div class="kpi ktot-excl" id="kCardExcl" onclick="setMode(false)" style="grid-column:span 1">
@@ -337,9 +338,9 @@ function initCharts(){
   var canvas=document.getElementById("dC");
   canvas.style.height=barH+"px";canvas.style.width="100%";canvas.height=barH;
   var barLabels=sorted.map(function(d){return d.dept;});
-  var approvedData=sorted.map(function(d){return d.activeCount>0?Math.round(d.approvedCount/d.activeCount*100):0;});
-  var notApprovedData=sorted.map(function(d){return d.activeCount>0?100-Math.round(d.approvedCount/d.activeCount*100):0;});
-  var noActiveData=sorted.map(function(d){return d.activeCount===0?100:0;});
+  var approvedData=sorted.map(function(d){return d.total>0?Math.round(d.approvedCount/d.total*100):0;});
+  var notApprovedData=sorted.map(function(d){return d.total>0?100-Math.round(d.approvedCount/d.total*100):0;});
+  var noActiveData=sorted.map(function(d){return 0;});
   window._barChart=new Chart(canvas,{type:"bar",data:{labels:barLabels,
     datasets:[
       {label:"Approved",stack:"s",backgroundColor:"#059669",borderSkipped:false,borderRadius:0,data:approvedData},
@@ -353,12 +354,12 @@ function initCharts(){
         tooltip:{mode:"y",intersect:false,callbacks:{
           title:function(items){
             var d=sorted[items[0].dataIndex];
-            return d.dept+" (Active: "+d.activeCount+")";
+            return d.dept+" (Total: "+d.total+")";
           },
           label:function(c){
             if(c.dataset.label==="No Active")return null;
             var d=sorted[c.dataIndex];
-            var n=c.dataset.label==="Approved"?d.approvedCount:(d.activeCount-d.approvedCount);
+            var n=c.dataset.label==="Approved"?d.approvedCount:(d.total-d.approvedCount);
             return " "+c.dataset.label+": "+n+" ("+c.raw+"%)";
           },
           filter:function(i){return i.dataset.label!=="No Active";}}},
@@ -531,14 +532,14 @@ function setMode(inclProb){
   }
   if(window._barChart){
     var s2=[...DEPT_DATA].sort(function(a,b){return a.dept.localeCompare(b.dept);});
-    window._barChart.data.labels=s2.map(function(d){return d.dept;});
+    window._barChart.data.labels=s2.map(function(d){return d.dept+" ("+Math.round(d.approvedCount/d.total*100)+"%)";});
     window._barChart.data.datasets=[
       {label:"Approved",stack:"s",backgroundColor:"#059669",borderSkipped:false,borderRadius:0,
-        data:s2.map(function(d){return d.activeCount>0?Math.round(d.approvedCount/d.activeCount*100):0;})},
+        data:s2.map(function(d){return d.total>0?Math.round(d.approvedCount/d.total*100):0;})},
       {label:"Not Approved",stack:"s",backgroundColor:"#e2e8f0",borderSkipped:false,
-        data:s2.map(function(d){return d.activeCount>0?100-Math.round(d.approvedCount/d.activeCount*100):0;})},
+        data:s2.map(function(d){return d.total>0?100-Math.round(d.approvedCount/d.total*100):0;})},
       {label:"No Active",stack:"s",backgroundColor:"#f1f5f9",borderSkipped:false,
-        data:s2.map(function(d){return d.activeCount===0?100:0;})}
+        data:s2.map(function(d){return 0;})}
     ];
     window._barChart.update();
   }
